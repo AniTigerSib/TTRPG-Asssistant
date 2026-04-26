@@ -1,0 +1,16 @@
+.git
+.gradle
+.idea
+.vscode
+.codex
+gradle
+gradlew
+gradlew.bat
+src
+build/classes
+build/generated
+build/reports
+build/resources
+build/test-results
+build/tmp
+HELP.md
