@@ -1,9 +1,12 @@
 package ttrpg.CharManagementService.domain.user;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidCredentailsException;
-import ttrpg.CharManagementService.domain.exception.InternalExceptions.InvalidArgumentException;
+import ttrpg.CharManagementService.domain.shared.Checkers;
 
 public class User {
     private UserId id;
@@ -11,72 +14,85 @@ public class User {
     private String email;
     private String username;
     private String passwordHash;
-    private String provider; // Maybe later will be enum
-    private String providerId;
-    private UserRole role;
+    // private String provider; // Maybe later will be enum
+    // private String providerId;
+    private Set<UserRole> roles;
     private Instant createdAt;
     private Instant updatedAt;
 
-    public User(String email, String username) {
-        this.id = UserId.newId();
-        this.email = email;
-        this.username = username;
-        this.passwordHash = new String();
-        this.provider = new String();
-        this.providerId = new String();
-        this.role = UserRole.USER;
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-    }
-
-    public User(String email, String username, String passwordHash) {
-        this.id = UserId.newId();
-        this.email = email;
-        this.username = username;
-        this.passwordHash = passwordHash;
-        this.provider = new String();
-        this.providerId = new String();
-        this.role = UserRole.USER;
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-    }
-
-    public User(UserId id, String email, String username,
-                String passwordHash, String provider, String providerId,
-                UserRole role, Instant createdAt, Instant updatedAt) {
+    private User(UserId id, String email, String username,
+                String passwordHash, Set<UserRole> roles,
+                Instant createdAt, Instant updatedAt) {
         this.id = id;
-        this.email = email;
-        this.username = username;
-        this.passwordHash = passwordHash;
-        this.provider = provider;
-        this.providerId = providerId;
-        this.role = role;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.email = Checkers.requireStringNonBlank(email, "email");
+        this.username = Checkers.requireStringNonBlank(username, "username");
+        this.passwordHash = Checkers.requireStringNonBlank(passwordHash, "password");
+        this.roles = normalizeRoles(roles);
+        this.createdAt = Checkers.requireNonNull(createdAt, "createdAt");
+        this.updatedAt = Checkers.requireNonNull(updatedAt, "updatedAt");
     }
 
-    public final UserId getId() {
-        return id;
+    public static User create(String email, String username, String passwordHash) {
+        return new User(
+            UserId.newId(),
+            email,
+            username,
+            passwordHash,
+            new HashSet<>(Arrays.asList(UserRole.USER)),
+            Instant.now(),
+            Instant.now()
+        );
     }
 
-    public final String getEmail() {
-        return email;
+    // public static User restore(UserId id, String email, String username,
+    //                            String passwordHash, Set<UserRole> roles,
+    //                            Instant createdAt, Instant updatedAt) {
+    //     return new User(
+    //         id,
+    //         email,
+    //         username,
+    //         passwordHash,
+    //         roles,
+    //         createdAt,
+    //         updatedAt
+    //     );
+    // }
+
+    public static User restore(UserSnapshot snapshot) {
+        Checkers.requireNonNull(snapshot, "snapshot");
+        return new User(
+            snapshot.id(),
+            snapshot.email(),
+            snapshot.username(),
+            snapshot.passwordHash(),
+            snapshot.roles(),
+            snapshot.createdAt(),
+            snapshot.updatedAt()
+        );
     }
 
-    public final String getUsername() {
-        return username;
-    }
+    public UserId getId() { return id; }
 
-    public final UserRole getRole() {
-        return role;
-    }
+    public String getEmail() { return email; }
 
-    public final Instant getCreatedAt() {
-        return createdAt;
-    }
+    public String getUsername() { return username; }
 
-    public final Instant getUpdatedAt() {
-        return updatedAt;
+    public Set<UserRole> getRoles() { return Set.copyOf(roles); }
+
+    public Instant getCreatedAt() { return createdAt; }
+
+    public Instant getUpdatedAt() { return updatedAt; }
+
+    public UserSnapshot snapshot() {
+        return new UserSnapshot(
+            id,
+            email,
+            username,
+            passwordHash,
+            Set.copyOf(roles),
+            createdAt,
+            updatedAt
+        );
     }
 
     public boolean isValidPassword(String passwordHash) {
@@ -84,12 +100,18 @@ public class User {
     }
 
     public void setPasswordHash(String oldPasswordHash, String newPasswordHash) {
-        if (oldPasswordHash == null || newPasswordHash == null) {
-            throw new InvalidArgumentException();
-        }
-        if (oldPasswordHash.isBlank() || newPasswordHash.isBlank() || !isValidPassword(oldPasswordHash)) {
+        Checkers.requireStringNonBlank(oldPasswordHash, "oldPasswordHash");
+        Checkers.requireStringNonBlank(newPasswordHash, "newPasswordHash");
+        if (!isValidPassword(oldPasswordHash)) {
             throw new InvalidCredentailsException();
         }
         this.passwordHash = newPasswordHash;
+        updatedAt = Instant.now();
+    }
+
+    private static Set<UserRole> normalizeRoles(Set<UserRole> roles) {
+        return (roles == null || roles.isEmpty())
+                ? new HashSet<>(Arrays.asList(UserRole.USER))
+                : new HashSet<>(roles);
     }
 }

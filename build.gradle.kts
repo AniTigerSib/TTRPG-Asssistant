@@ -3,6 +3,7 @@ plugins {
 	id("org.springframework.boot") version "4.0.6"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("org.flywaydb.flyway") version "12.4.0"
+	id("io.freefair.lombok") version "9.4.0"
 }
 
 group = "ttrpg"
@@ -37,12 +38,13 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 }
 
-tasks.withType<org.flywaydb.gradle.task.FlywayMigrateTask> {
-    url = System.getenv("DB_URL")
-    user = System.getenv("DB_USER")
-    password = System.getenv("DB_PASSWORD")
-    locations = arrayOf("classpath:db/migration")
-    baselineOnMigrate = true
+flyway {
+	url = "jdbc:postgresql://${System.getenv("DB_HOST")}:${System.getenv("DB_PORT")}/${System.getenv("DB_NAME")}"
+	user = System.getenv("DB_FLYWAY_USER")
+	password = System.getenv("DB_FLYWAY_PASSWORD")
+	defaultSchema = System.getenv("DB_SCHEMA")
+	locations = arrayOf("classpath:db/migration")
+	baselineOnMigrate = true
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {

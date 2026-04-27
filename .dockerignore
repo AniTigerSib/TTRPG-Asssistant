@@ -14,3 +14,4 @@ build/resources
 build/test-results
 build/tmp
 HELP.md
+docker/postgres/data
