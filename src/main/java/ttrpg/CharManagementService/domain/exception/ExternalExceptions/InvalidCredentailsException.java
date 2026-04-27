@@ -1,8 +1,6 @@
 package ttrpg.CharManagementService.domain.exception.ExternalExceptions;
 
-import ttrpg.CharManagementService.domain.exception.ExternalException;
-
-public class InvalidCredentailsException extends ExternalException {
+public class InvalidCredentailsException extends InvalidDataProvidedException {
     public InvalidCredentailsException() {
         super("Invalid credentails");
     }

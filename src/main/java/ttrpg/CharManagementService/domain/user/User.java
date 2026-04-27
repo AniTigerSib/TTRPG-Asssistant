@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidCredentailsException;
+import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidDataProvidedException;
 import ttrpg.CharManagementService.domain.shared.Checkers;
 
 public class User {
@@ -26,7 +26,7 @@ public class User {
         this.id = id;
         this.email = Checkers.requireStringNonBlank(email, "email");
         this.username = Checkers.requireStringNonBlank(username, "username");
-        this.passwordHash = Checkers.requireStringNonBlank(passwordHash, "password");
+        this.passwordHash = Checkers.requireStringNonBlank(passwordHash, "passwordHash");
         this.roles = normalizeRoles(roles);
         this.createdAt = Checkers.requireNonNull(createdAt, "createdAt");
         this.updatedAt = Checkers.requireNonNull(updatedAt, "updatedAt");
@@ -43,20 +43,6 @@ public class User {
             Instant.now()
         );
     }
-
-    // public static User restore(UserId id, String email, String username,
-    //                            String passwordHash, Set<UserRole> roles,
-    //                            Instant createdAt, Instant updatedAt) {
-    //     return new User(
-    //         id,
-    //         email,
-    //         username,
-    //         passwordHash,
-    //         roles,
-    //         createdAt,
-    //         updatedAt
-    //     );
-    // }
 
     public static User restore(UserSnapshot snapshot) {
         Checkers.requireNonNull(snapshot, "snapshot");
@@ -77,6 +63,8 @@ public class User {
 
     public String getUsername() { return username; }
 
+    public String getPasswordHash() { return passwordHash; }
+
     public Set<UserRole> getRoles() { return Set.copyOf(roles); }
 
     public Instant getCreatedAt() { return createdAt; }
@@ -95,17 +83,22 @@ public class User {
         );
     }
 
-    public boolean isValidPassword(String passwordHash) {
-        return this.passwordHash.equals(passwordHash);
+    public void changePasswordHash(String newPasswordHash) {
+        this.passwordHash = Checkers.requireStringNonBlank(newPasswordHash, "newPasswordHash");
+        updatedAt = Instant.now();
     }
 
-    public void setPasswordHash(String oldPasswordHash, String newPasswordHash) {
-        Checkers.requireStringNonBlank(oldPasswordHash, "oldPasswordHash");
-        Checkers.requireStringNonBlank(newPasswordHash, "newPasswordHash");
-        if (!isValidPassword(oldPasswordHash)) {
-            throw new InvalidCredentailsException();
+    public void addRole(UserRole role) {
+        roles.add(Checkers.requireNonNull(role, "role"));
+        updatedAt = Instant.now();
+    }
+
+    public void removeRole(UserRole role) {
+        Checkers.requireNonNull(role, "role");
+        if (role == UserRole.USER) {
+            throw new InvalidDataProvidedException("Base USER role cannot be removed");
         }
-        this.passwordHash = newPasswordHash;
+        roles.remove(role);
         updatedAt = Instant.now();
     }
 

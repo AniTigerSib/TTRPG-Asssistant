@@ -1,6 +1,6 @@
 package ttrpg.CharManagementService.domain.shared;
 
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidDataProvided;
+import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidDataProvidedException;
 import ttrpg.CharManagementService.domain.exception.InternalExceptions.InvalidArgumentException;
 
 public class Checkers {
@@ -15,7 +15,7 @@ public class Checkers {
     public static String requireStringNonBlank(String value, String fieldName) {
         requireNonNull(value, fieldName);
         if (value.isBlank()) {
-            throw new InvalidDataProvided(fieldName + " must not be blank");
+            throw new InvalidDataProvidedException(fieldName + " must not be blank");
         }
         return value;
     }

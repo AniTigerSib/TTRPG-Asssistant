@@ -2,11 +2,11 @@ package ttrpg.CharManagementService.domain.exception.ExternalExceptions;
 
 import ttrpg.CharManagementService.domain.exception.ExternalException;
 
-public class InvalidDataProvided extends ExternalException {
-    public InvalidDataProvided() {
+public class InvalidDataProvidedException extends ExternalException {
+    public InvalidDataProvidedException() {
         super("Invalid data provided");
     }
-    public InvalidDataProvided(String message) {
+    public InvalidDataProvidedException(String message) {
         super(message);
     }
 }

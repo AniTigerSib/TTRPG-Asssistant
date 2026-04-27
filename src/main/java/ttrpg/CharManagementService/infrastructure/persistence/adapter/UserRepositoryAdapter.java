@@ -23,6 +23,19 @@ public class UserRepositoryAdapter implements UserRepository {
         return jpaRepository.findById(id.value())
                 .map(mapper::toDomain);
     }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return jpaRepository.findByEmailIgnoreCase(email)
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return jpaRepository.findByUsernameIgnoreCase(username)
+                .map(mapper::toDomain);
+    }
+
     @Override
     public User save(User user) {
         var entity = mapper.toEntity(user);
@@ -36,5 +49,15 @@ public class UserRepositoryAdapter implements UserRepository {
     @Override
     public boolean existsById(UserId id) {
         return jpaRepository.existsById(id.value());
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return jpaRepository.existsByEmailIgnoreCase(email);
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return jpaRepository.existsByUsernameIgnoreCase(username);
     }
 }
