@@ -42,7 +42,7 @@ tasks.withType<Test> {
 }
 
 flyway {
-	url = "jdbc:postgresql://${System.getenv("DB_HOST")}:${System.getenv("DB_PORT")}/${System.getenv("DB_NAME")}"
+	url = "jdbc:postgresql://${System.getenv("DB_HOST")}:${System.getenv("DB_PORT")}/${System.getenv("DB_NAME")}?currentSchema=${System.getenv("DB_SCHEMA")}"
 	user = System.getenv("DB_FLYWAY_USER")
 	password = System.getenv("DB_FLYWAY_PASSWORD")
 	defaultSchema = System.getenv("DB_SCHEMA")

@@ -24,9 +24,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # environment:
-    #   DB_HOST: postgres
-    #   DB_PORT: 5432
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
     ports:
       - "8080:8080"
 
