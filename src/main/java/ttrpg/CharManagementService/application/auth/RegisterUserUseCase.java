@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import ttrpg.CharManagementService.domain.auth.PasswordHasher;
 import ttrpg.CharManagementService.domain.auth.PasswordPolicy;
 import ttrpg.CharManagementService.domain.auth.PasswordPolicyContext;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.UserAlreadyExistsException;
+import ttrpg.CharManagementService.domain.exception.UserAlreadyExistsException;
 import ttrpg.CharManagementService.domain.shared.Checkers;
 import ttrpg.CharManagementService.domain.user.User;
 import ttrpg.CharManagementService.domain.user.UserRepository;
@@ -29,10 +29,10 @@ public class RegisterUserUseCase {
         var password = Checkers.requireStringNonBlank(command.password(), "password");
 
         if (userRepository.existsByEmail(email)) {
-            throw new UserAlreadyExistsException("Email is already registered");
+            throw UserAlreadyExistsException.email(email);
         }
         if (userRepository.existsByUsername(username)) {
-            throw new UserAlreadyExistsException("Username is already taken");
+            throw UserAlreadyExistsException.username(username);
         }
 
         passwordPolicy.validate(password, new PasswordPolicyContext(email, username));

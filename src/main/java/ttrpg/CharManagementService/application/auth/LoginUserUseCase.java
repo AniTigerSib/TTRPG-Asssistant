@@ -5,7 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import ttrpg.CharManagementService.domain.auth.PasswordHasher;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidCredentailsException;
+import ttrpg.CharManagementService.domain.exception.InvalidCredentialsException;
 import ttrpg.CharManagementService.domain.shared.Checkers;
 import ttrpg.CharManagementService.domain.user.User;
 import ttrpg.CharManagementService.domain.user.UserRepository;
@@ -26,7 +26,7 @@ public class LoginUserUseCase {
 
         var user = findByLogin(login);
         if (user == null || !passwordHasher.matches(password, user.getPasswordHash())) {
-            throw new InvalidCredentailsException("Invalid login or password");
+            throw new InvalidCredentialsException("Invalid login or password");
         }
 
         return user;

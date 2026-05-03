@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
 import ttrpg.CharManagementService.domain.auth.PasswordPolicyContext;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidPasswordException;
+import ttrpg.CharManagementService.domain.exception.InvalidPasswordException;
 
 class DefaultPasswordPolicyTest {
 

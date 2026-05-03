@@ -10,7 +10,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import ttrpg.CharManagementService.domain.auth.PasswordHasher;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidCredentailsException;
+import ttrpg.CharManagementService.domain.exception.InvalidCredentialsException;
 import ttrpg.CharManagementService.domain.user.User;
 import ttrpg.CharManagementService.domain.user.UserId;
 import ttrpg.CharManagementService.domain.user.UserRepository;
@@ -51,7 +51,7 @@ class LoginUserUseCaseTest {
         var useCase = new LoginUserUseCase(repository, new PrefixPasswordHasher());
 
         assertThrows(
-            InvalidCredentailsException.class,
+            InvalidCredentialsException.class,
             () -> useCase.execute(new LoginUserCommand("hero", "Wrong1"))
         );
     }

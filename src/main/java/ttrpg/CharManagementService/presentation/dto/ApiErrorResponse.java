@@ -9,5 +9,5 @@ public record ApiErrorResponse(
     int status,
     Instant timestamp,
     String path,
-    Map<String, String> errors
+    Map<String, String> details
 ) {}

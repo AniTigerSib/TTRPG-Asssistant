@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 import ttrpg.CharManagementService.domain.auth.PasswordHasher;
 import ttrpg.CharManagementService.domain.auth.PasswordPolicy;
 import ttrpg.CharManagementService.domain.auth.PasswordPolicyContext;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidCredentailsException;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidPasswordException;
+import ttrpg.CharManagementService.domain.exception.InvalidCredentialsException;
+import ttrpg.CharManagementService.domain.exception.InvalidPasswordException;
 import ttrpg.CharManagementService.domain.user.User;
 import ttrpg.CharManagementService.domain.user.UserId;
 import ttrpg.CharManagementService.domain.user.UserRepository;
@@ -42,7 +42,7 @@ class ChangePasswordUseCaseTest {
         var useCase = new ChangePasswordUseCase(repository, new AcceptAllPasswordPolicy(), new PrefixPasswordHasher());
 
         assertThrows(
-            InvalidCredentailsException.class,
+            InvalidCredentialsException.class,
             () -> useCase.execute(new ChangePasswordCommand(user.getId().value(), "Wrong1", "BetterPass2"))
         );
     }

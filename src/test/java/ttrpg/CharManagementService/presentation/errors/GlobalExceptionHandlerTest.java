@@ -18,8 +18,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidDataProvidedException;
-import ttrpg.CharManagementService.domain.exception.InternalExceptions.InvalidArgumentException;
+import ttrpg.CharManagementService.domain.exception.InvalidInputException;
+import ttrpg.CharManagementService.domain.exception.InvariantViolationException;
 
 class GlobalExceptionHandlerTest {
 
@@ -33,18 +33,18 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void mapsExternalExceptionToBadRequest() throws Exception {
+    void mapsClientExceptionToBadRequest() throws Exception {
         mockMvc.perform(get("/external"))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
+            .andExpect(jsonPath("$.code").value("INVALID_INPUT"))
             .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
-    void mapsInternalExceptionToServerError() throws Exception {
+    void mapsServerExceptionToServerError() throws Exception {
         mockMvc.perform(get("/internal"))
             .andExpect(status().isInternalServerError())
-            .andExpect(jsonPath("$.code").value("INTERNAL_SERVER_ERROR"))
+            .andExpect(jsonPath("$.code").value("INVARIANT_VIOLATION"))
             .andExpect(jsonPath("$.message").value("Internal server error"))
             .andExpect(jsonPath("$.status").value(500));
     }
@@ -56,19 +56,19 @@ class GlobalExceptionHandlerTest {
                 .content("{\"name\":\"\"}"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("REQUEST_VALIDATION_FAILED"))
-            .andExpect(jsonPath("$.errors.name").exists());
+            .andExpect(jsonPath("$.details.name").exists());
     }
 
     @RestController
     static class TestController {
         @GetMapping("/external")
         String external() {
-            throw new InvalidDataProvidedException("bad request");
+            throw InvalidInputException.invalidValue("request", "bad request");
         }
 
         @GetMapping("/internal")
         String internal() {
-            throw new InvalidArgumentException("broken");
+            throw new InvariantViolationException("broken");
         }
 
         @PostMapping(path = "/validate", consumes = MediaType.APPLICATION_JSON_VALUE)
