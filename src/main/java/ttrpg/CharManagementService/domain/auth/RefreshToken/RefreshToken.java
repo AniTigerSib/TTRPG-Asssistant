@@ -1,6 +1,6 @@
 package ttrpg.CharManagementService.domain.auth.RefreshToken;
 
-import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 
+import ttrpg.CharManagementService.domain.exception.InvalidTokenException;
 import ttrpg.CharManagementService.domain.exception.InvariantViolationException;
 import ttrpg.CharManagementService.domain.shared.Checkers;
 import ttrpg.CharManagementService.domain.user.UserId;
@@ -28,13 +29,13 @@ public class RefreshToken {
     private UserId userId;
     private String tokenHash;
     private String userAgent;
-    private Inet4Address ipAddress;
+    private InetAddress ipAddress;
     private Instant expiresAt;
     private Instant revokedAt;
     private Instant createdAt;
 
     private RefreshToken(RefreshTokenId id, UserId userId, String tokenHash,
-                         String userAgent, Inet4Address ipAddress, Instant expiresAt,
+                         String userAgent, InetAddress ipAddress, Instant expiresAt,
                          Instant revokedAt, Instant createdAt) {
         this.id = Checkers.requireNonNull(id, "id");
         this.userId = Checkers.requireNonNull(userId, "userId");
@@ -46,17 +47,28 @@ public class RefreshToken {
         this.createdAt = Checkers.requireNonNull(createdAt, "createdAt");
     }
 
-    public static RefreshToken create(UserId userId, String userAgent, Inet4Address ipAddress, Instant expiresAt) {
-        Instant now = Instant.now();
-        return new RefreshToken(
-            RefreshTokenId.newId(),
-            userId,
-            generateTokenHash(generateRawRefreshToken()),
-            userAgent,
-            ipAddress,
-            expiresAt,
-            null,
-            now
+    public static IssuedRefreshToken issue(UserId userId, String userAgent, InetAddress ipAddress, Instant expiresAt) {
+        Checkers.requireNonNull(userId, "userId");
+        Checkers.requireStringNonBlank(userAgent, "userAgent");
+        Checkers.requireNonNull(ipAddress, "ipAddress");
+        Checkers.requireNonNull(expiresAt, "expiresAt");
+
+        var id = RefreshTokenId.newId();
+        var rawToken = rawToken(id);
+        var now = Instant.now();
+
+        return new IssuedRefreshToken(
+            rawToken,
+            new RefreshToken(
+                id,
+                userId,
+                hash(rawToken),
+                userAgent,
+                ipAddress,
+                expiresAt,
+                null,
+                now
+            )
         );
     }
 
@@ -74,6 +86,19 @@ public class RefreshToken {
         );
     }
 
+    public static RefreshTokenId extractTokenId(String rawToken) {
+        var value = Checkers.requireStringNonBlank(rawToken, "rawToken");
+        var separatorIndex = value.indexOf('.');
+        if (separatorIndex <= 0) {
+            throw new InvalidTokenException("Invalid refresh token");
+        }
+        try {
+            return RefreshTokenId.fromString(value.substring(0, separatorIndex));
+        } catch (RuntimeException exception) {
+            throw new InvalidTokenException("Invalid refresh token");
+        }
+    }
+
     public RefreshTokenSnapshot snapshot() {
         return new RefreshTokenSnapshot(
             id,
@@ -87,27 +112,35 @@ public class RefreshToken {
         );
     }
 
-    public RefreshTokenId id() { return id; }
+    public RefreshTokenId getId() { return id; }
 
-    public UserId userId() { return userId; }
+    public UserId getUserId() { return userId; }
 
-    public String tokenHash() { return tokenHash; }
+    public String getTokenHash() { return tokenHash; }
 
-    public String userAgent() { return userAgent; }
+    public String getUserAgent() { return userAgent; }
 
-    public Inet4Address ipAddress() { return ipAddress; }
+    public InetAddress getIpAddress() { return ipAddress; }
 
-    public Instant expiresAt() { return expiresAt; }
+    public Instant getExpiresAt() { return expiresAt; }
 
-    public Instant revokedAt() { return revokedAt; }
+    public Instant getRevokedAt() { return revokedAt; }
 
-    public Instant createdAt() { return createdAt; }
+    public Instant getCreatedAt() { return createdAt; }
 
     public boolean isExpired() { return expiresAt.isBefore(Instant.now()); }
 
     public boolean isRevoked() { return revokedAt != null; }
 
-    public void revoke() { revokedAt = Instant.now(); }
+    public boolean matches(String rawToken) {
+        return tokenHash.equals(hash(rawToken));
+    }
+
+    public void revoke() {
+        if (!isRevoked()) {
+            revokedAt = Instant.now();
+        }
+    }
 
     public boolean isValid() {
         if (isRevoked())
@@ -120,14 +153,18 @@ public class RefreshToken {
         return true;
     }
 
-    private static String generateTokenHash(String rawRefreshToken) {
+    private static String rawToken(RefreshTokenId id) {
+        return id.value() + "." + generateTokenSecret();
+    }
+
+    private static String hash(String rawRefreshToken) {
         String token = Checkers.requireStringNonBlank(rawRefreshToken, "rawRefreshToken");
         MessageDigest digest = SHA_256.get();
         digest.reset();
         return HEX_FORMAT.formatHex(digest.digest(token.getBytes(StandardCharsets.UTF_8)));
     }
 
-    private static String generateRawRefreshToken() {
+    private static String generateTokenSecret() {
         byte[] tokenBytes = new byte[32];
         SECURE_RANDOM.nextBytes(tokenBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);

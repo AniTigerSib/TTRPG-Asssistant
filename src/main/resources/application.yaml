@@ -26,3 +26,13 @@ spring:
 
   application:
     name: service
+
+app:
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+  auth:
+    tokens:
+      access-ttl: ${AUTH_ACCESS_TOKEN_TTL:PT15M}
+      refresh-ttl: ${AUTH_REFRESH_TOKEN_TTL:P30D}
