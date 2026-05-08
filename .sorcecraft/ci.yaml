@@ -13,13 +13,13 @@ workflows:
     settings:
       max_cube_duration: 20m
       retry: 1
-    runs_on: ci-runner
+    runs_on: [self-hosted, ci-runner]
     tasks:
       - name: unit-tests
         cubes:
           - name: setup-and-test
-            image: openjdk:21-jdk-slim
             script:
+              - java -version
               - chmod +x ./gradlew
               - ./gradlew test --info --stacktrace
             artifacts:
