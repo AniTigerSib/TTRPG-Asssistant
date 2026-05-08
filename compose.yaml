@@ -1,8 +1,6 @@
 services:
   postgres:
     image: postgres:17-alpine
-    env_file:
-      - docker/database.env
     ports:
       - "5432:5432"
     healthcheck:
@@ -30,8 +28,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file:
-      - docker/database.env
     depends_on:
       postgres:
         condition: service_healthy

@@ -31,7 +31,7 @@ workflows:
 
           - name: setup-java-environment
             image: eclipse-temurin:21-jdk
-            commands:
+            scripts:
               - java -version
               - ./gradlew --version
 
@@ -39,7 +39,7 @@ workflows:
             image: eclipse-temurin:21-jdk
             env:
               GRADLE_USER_HOME: /tmp/gradle-user-home
-            commands:
+            scripts:
               - apt-get update && apt-get install -y curl
               # Clean build and run tests
               - ./gradlew clean build -x integrationTest
@@ -59,7 +59,7 @@ workflows:
 
           - name: setup-docker-environment
             image: eclipse-temurin:21-jdk
-            commands:
+            scripts:
               - apt-get update && apt-get install -y curl docker.io docker-compose
               - java -version
               - docker --version
@@ -74,7 +74,7 @@ workflows:
               POSTGRES_DB: ttrpg_db
               POSTGRES_USER: postgres
               POSTGRES_PASSWORD: postgres
-              DB_HOST: localhost
+              DB_HOST: postgres
               DB_PORT: 5432
               DB_NAME: ttrpg_db
               DB_SCHEMA: ttrpg_assistant_app
@@ -82,7 +82,7 @@ workflows:
               DB_FLYWAY_PASSWORD: flyway_password
               INTEGRATION_BASE_URL: http://localhost:8080
               COMPOSE_PROJECT_NAME: ttrpg-service-ci
-            commands:
+            scripts:
               - chmod +x gradlew
               - chmod +x scripts/run-integration-tests.sh
               # Build the application JAR
