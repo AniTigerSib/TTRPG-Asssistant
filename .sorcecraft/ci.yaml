@@ -1,0 +1,28 @@
+on:
+  pull_request:
+    - workflows: ci
+      filter:
+        source_branches: develop
+        target_branches: main
+  push:
+    - workflows: ci
+      filter:
+        branches: [develop, main]
+workflows:
+  ci:
+    settings:
+      max_cube_duration: 20m
+      retry: 1
+    runs_on: ci-runner
+    tasks:
+      - name: unit-tests
+        cubes:
+          - name: setup-and-test
+            image: openjdk:21-jdk-slim
+            script:
+              - chmod +x ./gradlew
+              - ./gradlew test --info --stacktrace
+            artifacts:
+              paths:
+                - build/reports/tests/**
+                - build/test-results/**
