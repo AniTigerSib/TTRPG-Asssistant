@@ -89,4 +89,28 @@ public class AuthenticationTokenService {
 
         return Optional.of(accessToken.userId());
     }
+
+    public void logout(UserId userId, String rawAccessToken, String rawRefreshToken) {
+        Checkers.requireNonNull(userId, "userId");
+        Checkers.requireStringNonBlank(rawAccessToken, "accessToken");
+        Checkers.requireStringNonBlank(rawRefreshToken, "refreshToken");
+
+        var refreshTokenId = RefreshToken.extractTokenId(rawRefreshToken);
+        var storedRefreshToken = refreshTokenRepository.findById(refreshTokenId)
+            .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
+
+        if (!storedRefreshToken.matches(rawRefreshToken)) {
+            throw new InvalidTokenException("Invalid refresh token");
+        }
+        if (!storedRefreshToken.getUserId().equals(userId)) {
+            throw new InvalidTokenException("Refresh token does not belong to authenticated user");
+        }
+
+        accessTokenRepository.deleteById(AccessToken.extractTokenId(rawAccessToken));
+
+        if (!storedRefreshToken.isRevoked()) {
+            storedRefreshToken.revoke();
+            refreshTokenRepository.save(storedRefreshToken);
+        }
+    }
 }

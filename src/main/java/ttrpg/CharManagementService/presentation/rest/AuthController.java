@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,14 +19,19 @@ import ttrpg.CharManagementService.application.auth.ChangePasswordCommand;
 import ttrpg.CharManagementService.application.auth.ChangePasswordUseCase;
 import ttrpg.CharManagementService.application.auth.LoginUserCommand;
 import ttrpg.CharManagementService.application.auth.LoginUserUseCase;
+import ttrpg.CharManagementService.application.auth.LogoutUserCommand;
+import ttrpg.CharManagementService.application.auth.LogoutUserUseCase;
 import ttrpg.CharManagementService.application.auth.RefreshAuthenticationCommand;
 import ttrpg.CharManagementService.application.auth.RefreshAuthenticationUseCase;
 import ttrpg.CharManagementService.application.auth.RegisterUserCommand;
 import ttrpg.CharManagementService.application.auth.RegisterUserUseCase;
 import ttrpg.CharManagementService.domain.exception.InvariantViolationException;
+import ttrpg.CharManagementService.domain.exception.InvalidTokenException;
+import ttrpg.CharManagementService.domain.user.User;
 import ttrpg.CharManagementService.presentation.dto.AuthenticationResponse;
 import ttrpg.CharManagementService.presentation.dto.ChangePasswordRequest;
 import ttrpg.CharManagementService.presentation.dto.LoginUserRequest;
+import ttrpg.CharManagementService.presentation.dto.LogoutRequest;
 import ttrpg.CharManagementService.presentation.dto.RefreshTokenRequest;
 import ttrpg.CharManagementService.presentation.dto.RegisterUserRequest;
 import ttrpg.CharManagementService.presentation.dto.UserResponse;
@@ -42,6 +48,7 @@ public class AuthController {
     private final LoginUserUseCase loginUserUseCase;
     private final RefreshAuthenticationUseCase refreshAuthenticationUseCase;
     private final ChangePasswordUseCase changePasswordUseCase;
+    private final LogoutUserUseCase logoutUserUseCase;
     private final UserResponseMapper userResponseMapper;
     private final AuthenticationResponseMapper authenticationResponseMapper;
 
@@ -89,9 +96,28 @@ public class AuthController {
 
     @PostMapping("/change-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+    public void changePassword(
+        @AuthenticationPrincipal User currentUser,
+        @Valid @RequestBody ChangePasswordRequest request
+    ) {
         changePasswordUseCase.execute(
-            new ChangePasswordCommand(request.userId(), request.oldPassword(), request.newPassword())
+            new ChangePasswordCommand(currentUser.getId().value(), request.oldPassword(), request.newPassword())
+        );
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(
+        @AuthenticationPrincipal User currentUser,
+        @Valid @RequestBody LogoutRequest request,
+        HttpServletRequest httpServletRequest
+    ) {
+        logoutUserUseCase.execute(
+            new LogoutUserCommand(
+                currentUser.getId().value(),
+                extractBearerToken(httpServletRequest),
+                request.refreshToken()
+            )
         );
     }
 
@@ -106,5 +132,13 @@ public class AuthController {
         } catch (UnknownHostException exception) {
             throw new InvariantViolationException("Failed to resolve request IP address", exception);
         }
+    }
+
+    private String extractBearerToken(HttpServletRequest request) {
+        var authorization = request.getHeader("Authorization");
+        if (authorization == null || authorization.isBlank() || !authorization.startsWith("Bearer ")) {
+            throw new InvalidTokenException("Missing bearer access token");
+        }
+        return authorization.substring(7).trim();
     }
 }

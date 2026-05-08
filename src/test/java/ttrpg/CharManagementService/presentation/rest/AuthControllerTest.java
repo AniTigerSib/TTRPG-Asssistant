@@ -25,6 +25,7 @@ import ttrpg.CharManagementService.application.auth.AuthenticationTokens;
 import ttrpg.CharManagementService.application.auth.ChangePasswordUseCase;
 import ttrpg.CharManagementService.application.auth.LoginUserCommand;
 import ttrpg.CharManagementService.application.auth.LoginUserUseCase;
+import ttrpg.CharManagementService.application.auth.LogoutUserUseCase;
 import ttrpg.CharManagementService.application.auth.RefreshAuthenticationCommand;
 import ttrpg.CharManagementService.application.auth.RefreshAuthenticationUseCase;
 import ttrpg.CharManagementService.application.auth.RegisterUserUseCase;
@@ -43,6 +44,7 @@ class AuthControllerTest {
     private final LoginUserUseCase loginUserUseCase = Mockito.mock(LoginUserUseCase.class);
     private final RefreshAuthenticationUseCase refreshAuthenticationUseCase = Mockito.mock(RefreshAuthenticationUseCase.class);
     private final ChangePasswordUseCase changePasswordUseCase = Mockito.mock(ChangePasswordUseCase.class);
+    private final LogoutUserUseCase logoutUserUseCase = Mockito.mock(LogoutUserUseCase.class);
     private final UserResponseMapper userResponseMapper = Mockito.mock(UserResponseMapper.class);
     private final AuthenticationResponseMapper authenticationResponseMapper = Mockito.mock(AuthenticationResponseMapper.class);
 
@@ -56,6 +58,7 @@ class AuthControllerTest {
                     loginUserUseCase,
                     refreshAuthenticationUseCase,
                     changePasswordUseCase,
+                    logoutUserUseCase,
                     userResponseMapper,
                     authenticationResponseMapper
                 )

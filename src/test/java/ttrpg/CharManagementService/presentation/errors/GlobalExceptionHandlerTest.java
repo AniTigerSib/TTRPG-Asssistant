@@ -59,6 +59,16 @@ class GlobalExceptionHandlerTest {
             .andExpect(jsonPath("$.details.name").exists());
     }
 
+    @Test
+    void mapsUnsupportedMediaTypeTo415() throws Exception {
+        mockMvc.perform(post("/validate")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .content("name=test"))
+            .andExpect(status().isUnsupportedMediaType())
+            .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"))
+            .andExpect(jsonPath("$.status").value(415));
+    }
+
     @RestController
     static class TestController {
         @GetMapping("/external")

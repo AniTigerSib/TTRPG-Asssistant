@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -105,6 +106,20 @@ public class GlobalExceptionHandler {
             HttpStatusCode.valueOf(ErrorCode.MALFORMED_REQUEST_BODY.httpStatus()),
             ErrorCode.MALFORMED_REQUEST_BODY.name(),
             ErrorCode.MALFORMED_REQUEST_BODY.defaultMessage(),
+            request,
+            Map.of()
+        );
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnsupportedMediaType(
+        HttpMediaTypeNotSupportedException exception,
+        HttpServletRequest request
+    ) {
+        return build(
+            HttpStatusCode.valueOf(ErrorCode.UNSUPPORTED_MEDIA_TYPE.httpStatus()),
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE.name(),
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE.defaultMessage(),
             request,
             Map.of()
         );

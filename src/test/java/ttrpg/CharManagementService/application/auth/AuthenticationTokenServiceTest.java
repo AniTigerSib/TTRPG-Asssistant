@@ -143,6 +143,21 @@ class AuthenticationTokenServiceTest {
     }
 
     @Test
+    void logoutDeletesAccessTokenAndRevokesRefreshToken() {
+        var userId = UserId.newId();
+        var tokens = authenticationTokenService.issueTokens(
+            userId,
+            "JUnit",
+            InetAddress.getLoopbackAddress()
+        );
+
+        authenticationTokenService.logout(userId, tokens.accessToken(), tokens.refreshToken());
+
+        assertTrue(accessTokenRepository.findById(AccessToken.extractTokenId(tokens.accessToken())).isEmpty());
+        assertTrue(refreshTokenRepository.findByRawToken(tokens.refreshToken()).orElseThrow().isRevoked());
+    }
+
+    @Test
     void returnsEmptyAndDeletesExpiredAccessToken() {
         var userId = UserId.newId();
         var issued = AccessToken.issue(userId, Instant.now().minusSeconds(5));
