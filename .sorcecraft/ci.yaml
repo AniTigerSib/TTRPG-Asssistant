@@ -31,7 +31,7 @@ workflows:
 
           - name: setup-java-environment
             image: eclipse-temurin:21-jdk
-            scripts:
+            script:
               - java -version
               - ./gradlew --version
 
@@ -39,7 +39,7 @@ workflows:
             image: eclipse-temurin:21-jdk
             env:
               GRADLE_USER_HOME: /tmp/gradle-user-home
-            scripts:
+            script:
               - apt-get update && apt-get install -y curl
               # Clean build and run tests
               - ./gradlew clean build -x integrationTest
@@ -59,7 +59,7 @@ workflows:
 
           - name: setup-docker-environment
             image: eclipse-temurin:21-jdk
-            scripts:
+            script:
               - apt-get update && apt-get install -y curl docker.io docker-compose
               - java -version
               - docker --version
@@ -82,13 +82,13 @@ workflows:
               DB_FLYWAY_PASSWORD: flyway_password
               INTEGRATION_BASE_URL: http://localhost:8080
               COMPOSE_PROJECT_NAME: ttrpg-service-ci
-            scripts:
+            script:
               - chmod +x gradlew
-              - chmod +x scripts/run-integration-tests.sh
+              - chmod +x script/run-integration-tests.sh
               # Build the application JAR
               - ./gradlew bootJar
               # Run integration tests
-              - ./scripts/run-integration-tests.sh
+              - ./script/run-integration-tests.sh
               # Clean up after tests
               - docker-compose -p "$COMPOSE_PROJECT_NAME" down -v --remove-orphans || true
             caches:
