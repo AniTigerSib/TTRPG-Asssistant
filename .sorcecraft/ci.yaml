@@ -20,7 +20,6 @@ workflows:
     settings:
       max_cube_duration: 30m
       retry: 1
-    runs_on: [self-hosted, ci-runner]
     tasks:
       - name: build-and-unit-tests
         cubes:
