@@ -22,6 +22,9 @@ workflows:
       retry: 1
     tasks:
       - name: build-and-unit-tests
+        env:
+          YC_DOCKER_REGISTRY_URI: cr.yandex/crpvhuu3kgjcf5grgd3i
+          YC_SERVICE_ACCOUNT_ID: ${{ tokens.SERVICE_CONNECTION.service_account_id }}
         cubes:
           - name: get-iam-token
             env:
