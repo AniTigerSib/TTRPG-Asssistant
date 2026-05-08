@@ -19,6 +19,17 @@ repositories {
 	mavenCentral()
 }
 
+val integrationTestSourceSet = sourceSets.create("integrationTest") {
+	java.srcDir("src/integrationTest/java")
+	resources.srcDir("src/integrationTest/resources")
+
+	compileClasspath += sourceSets.main.get().output + configurations.testRuntimeClasspath.get()
+	runtimeClasspath += output + compileClasspath
+}
+
+configurations[integrationTestSourceSet.implementationConfigurationName].extendsFrom(configurations.testImplementation.get())
+configurations[integrationTestSourceSet.runtimeOnlyConfigurationName].extendsFrom(configurations.testRuntimeOnly.get())
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -40,6 +51,23 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+tasks.register<Test>("integrationTest") {
+	description = "Runs integration tests against a running application instance."
+	group = LifecycleBasePlugin.VERIFICATION_GROUP
+	testClassesDirs = integrationTestSourceSet.output.classesDirs
+	classpath = integrationTestSourceSet.runtimeClasspath
+	useJUnitPlatform()
+	shouldRunAfter(tasks.test)
+
+	systemProperty(
+		"integration.base-url",
+		providers.gradleProperty("integrationBaseUrl")
+			.orElse(providers.environmentVariable("INTEGRATION_BASE_URL"))
+			.orElse("http://localhost:8080")
+			.get()
+	)
 }
 
 flyway {

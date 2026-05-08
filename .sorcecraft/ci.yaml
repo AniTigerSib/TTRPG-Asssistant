@@ -4,25 +4,93 @@ on:
       filter:
         source_branches: develop
         target_branches: main
+
   push:
     - workflows: ci
       filter:
         branches: [develop, main]
+
+tokens:
+  SERVICE_CONNECTION:
+    service_connection: default-service-connection
+    scope: repo
+
 workflows:
   ci:
     settings:
-      max_cube_duration: 20m
+      max_cube_duration: 30m
       retry: 1
     runs_on: [self-hosted, ci-runner]
     tasks:
-      - name: unit-tests
+      - name: build-and-unit-tests
         cubes:
-          - name: setup-and-test
-            script:
+          - name: get-iam-token
+            env:
+              id_token: ${{ tokens.SERVICE_CONNECTION.id_token}}
+              yc_sa_id: ${{ tokens.SERVICE_CONNECTION.service_account_id }}
+            image: cr.yandex/sourcecraft/yc-iam:latest
+
+          - name: setup-java-environment
+            image: eclipse-temurin:21-jdk
+            commands:
               - java -version
-              - chmod +x ./gradlew
-              - ./gradlew test --info --stacktrace
-            artifacts:
-              paths:
-                - build/reports/tests/**
-                - build/test-results/**
+              - ./gradlew --version
+
+          - name: build-and-run-unit-tests
+            image: eclipse-temurin:21-jdk
+            env:
+              GRADLE_USER_HOME: /tmp/gradle-user-home
+            commands:
+              - apt-get update && apt-get install -y curl
+              # Clean build and run tests
+              - ./gradlew clean build -x integrationTest
+              # Run tests with detailed output
+              - ./gradlew test --info
+            caches:
+              - gradle: /tmp/gradle-user-home
+
+      - name: integration-tests
+        needs: [build-and-unit-tests]
+        cubes:
+          - name: get-iam-token
+            env:
+              id_token: ${{ tokens.SERVICE_CONNECTION.id_token}}
+              yc_sa_id: ${{ tokens.SERVICE_CONNECTION.service_account_id }}
+            image: cr.yandex/sourcecraft/yc-iam:latest
+
+          - name: setup-docker-environment
+            image: eclipse-temurin:21-jdk
+            commands:
+              - apt-get update && apt-get install -y curl docker.io docker-compose
+              - java -version
+              - docker --version
+              - docker-compose --version
+              # Start Docker daemon if not running
+              - service docker start || true
+
+          - name: run-integration-tests
+            image: eclipse-temurin:21-jdk
+            env:
+              GRADLE_USER_HOME: /tmp/gradle-user-home
+              POSTGRES_DB: ttrpg_db
+              POSTGRES_USER: postgres
+              POSTGRES_PASSWORD: postgres
+              DB_HOST: localhost
+              DB_PORT: 5432
+              DB_NAME: ttrpg_db
+              DB_SCHEMA: ttrpg_assistant_app
+              DB_FLYWAY_USER: flyway_user
+              DB_FLYWAY_PASSWORD: flyway_password
+              INTEGRATION_BASE_URL: http://localhost:8080
+              COMPOSE_PROJECT_NAME: ttrpg-service-ci
+            commands:
+              - chmod +x gradlew
+              - chmod +x scripts/run-integration-tests.sh
+              # Build the application JAR
+              - ./gradlew bootJar
+              # Run integration tests
+              - ./scripts/run-integration-tests.sh
+              # Clean up after tests
+              - docker-compose -p "$COMPOSE_PROJECT_NAME" down -v --remove-orphans || true
+            caches:
+              - gradle: /tmp/gradle-user-home
