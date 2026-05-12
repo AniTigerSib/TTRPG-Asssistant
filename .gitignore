@@ -40,3 +40,4 @@ out/
 .codex
 *.env
 .codeassistant
+.ci-logs/

@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ttrpg-service-it}"
 INTEGRATION_BASE_URL="${INTEGRATION_BASE_URL:-http://localhost:8080}"
 HEALTHCHECK_URL="${INTEGRATION_BASE_URL%/}/actuator/health"
-LOG_DIR="${LOG_DIR:-$ROOT_DIR/build/ci-logs/integration}"
+LOG_DIR="${LOG_DIR:-$ROOT_DIR/.ci-logs/integration}"
 TEST_LOG_FILE="$LOG_DIR/integration-test.log"
 CONTAINER_LOG_DIR="$LOG_DIR/containers"
 

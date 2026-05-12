@@ -28,20 +28,20 @@ jobs:
           java-version: "21"
 
       - name: Prepare log directory
-        run: mkdir -p build/ci-logs/unit
+        run: mkdir -p .ci-logs/unit
 
       - name: Run unit tests
         shell: bash
         run: |
           chmod +x gradlew
-          ./gradlew clean test 2>&1 | tee build/ci-logs/unit/unit-tests.log
+          ./gradlew clean test 2>&1 | tee .ci-logs/unit/unit-tests.log
 
       - name: Upload unit test logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-logs
-          path: build/ci-logs/unit/**
+          path: .ci-logs/unit/**
           if-no-files-found: warn
           retention-days: 14
 
@@ -64,14 +64,14 @@ jobs:
           java-version: "21"
 
       - name: Prepare log directory
-        run: mkdir -p build/ci-logs/integration
+        run: mkdir -p .ci-logs/integration
 
       - name: Run integration tests
         shell: bash
         env:
           COMPOSE_PROJECT_NAME: ttrpg-service-ci
           INTEGRATION_BASE_URL: http://localhost:8080
-          LOG_DIR: build/ci-logs/integration
+          LOG_DIR: .ci-logs/integration
         run: |
           chmod +x gradlew
           bash scripts/run-integration-tests.sh
@@ -81,6 +81,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: integration-test-logs
-          path: build/ci-logs/integration/**
+          path: .ci-logs/integration/**
           if-no-files-found: warn
           retention-days: 14
