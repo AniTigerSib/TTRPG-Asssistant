@@ -73,6 +73,17 @@ jobs:
           INTEGRATION_BASE_URL: http://localhost:8080
           LOG_DIR: .ci-logs/integration
           DOCKER_SUDO: "true"
+          POSTGRES_DB: ttrpg_tests_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          DB_FLYWAY_USER: flyway_user
+          DB_FLYWAY_PASSWORD: flyway_pass
+          DB_NAME: ttrpg_tests_db
+          DB_HOST: postgres
+          DB_PORT: 5432
+          DB_USER: ttrpg_tests_app_user
+          DB_PASSWORD: ttrpg_tests_app_pass
+          DB_SCHEMA: ttrpg_assistant_tests_app
         run: |
           chmod +x gradlew
           bash scripts/run-integration-tests.sh
