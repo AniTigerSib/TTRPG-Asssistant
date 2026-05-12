@@ -22,7 +22,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import ttrpg.CharManagementService.application.auth.AuthenticationResult;
 import ttrpg.CharManagementService.application.auth.AuthenticationTokens;
-import ttrpg.CharManagementService.application.auth.ChangePasswordUseCase;
 import ttrpg.CharManagementService.application.auth.LoginUserCommand;
 import ttrpg.CharManagementService.application.auth.LoginUserUseCase;
 import ttrpg.CharManagementService.application.auth.LogoutUserUseCase;
@@ -43,7 +42,6 @@ class AuthControllerTest {
     private final RegisterUserUseCase registerUserUseCase = Mockito.mock(RegisterUserUseCase.class);
     private final LoginUserUseCase loginUserUseCase = Mockito.mock(LoginUserUseCase.class);
     private final RefreshAuthenticationUseCase refreshAuthenticationUseCase = Mockito.mock(RefreshAuthenticationUseCase.class);
-    private final ChangePasswordUseCase changePasswordUseCase = Mockito.mock(ChangePasswordUseCase.class);
     private final LogoutUserUseCase logoutUserUseCase = Mockito.mock(LogoutUserUseCase.class);
     private final UserResponseMapper userResponseMapper = Mockito.mock(UserResponseMapper.class);
     private final AuthenticationResponseMapper authenticationResponseMapper = Mockito.mock(AuthenticationResponseMapper.class);
@@ -57,7 +55,6 @@ class AuthControllerTest {
                     registerUserUseCase,
                     loginUserUseCase,
                     refreshAuthenticationUseCase,
-                    changePasswordUseCase,
                     logoutUserUseCase,
                     userResponseMapper,
                     authenticationResponseMapper

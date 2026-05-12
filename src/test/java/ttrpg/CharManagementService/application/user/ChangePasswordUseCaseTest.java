@@ -1,4 +1,4 @@
-package ttrpg.CharManagementService.application.auth;
+package ttrpg.CharManagementService.application.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -61,13 +61,13 @@ class ChangePasswordUseCaseTest {
         );
     }
 
-    private static final class AcceptAllPasswordPolicy implements PasswordPolicy {
+    static final class AcceptAllPasswordPolicy implements PasswordPolicy {
         @Override
         public void validate(String rawPassword, PasswordPolicyContext context) {
         }
     }
 
-    private static final class PrefixPasswordHasher implements PasswordHasher {
+    static final class PrefixPasswordHasher implements PasswordHasher {
         @Override
         public String hash(String rawPassword) {
             return "hashed:" + rawPassword;
@@ -79,8 +79,8 @@ class ChangePasswordUseCaseTest {
         }
     }
 
-    private static final class InMemoryUserRepository implements UserRepository {
-        private final Map<UserId, User> storage = new HashMap<>();
+    static class InMemoryUserRepository implements UserRepository {
+        final Map<UserId, User> storage = new HashMap<>();
 
         @Override
         public Optional<User> findById(UserId id) {

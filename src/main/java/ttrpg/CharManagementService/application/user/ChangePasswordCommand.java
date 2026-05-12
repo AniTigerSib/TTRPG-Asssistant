@@ -1,4 +1,4 @@
-package ttrpg.CharManagementService.application.auth;
+package ttrpg.CharManagementService.application.user;
 
 import java.util.UUID;
 

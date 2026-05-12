@@ -89,6 +89,11 @@ public class User {
         updatedAt = Instant.now();
     }
 
+    public void changeUsername(String newUsername) {
+        this.username = Checkers.requireStringNonBlank(newUsername, "newUsername");
+        updatedAt = Instant.now();
+    }
+
     public void addRole(UserRole role) {
         roles.add(Checkers.requireNonNull(role, "role"));
         updatedAt = Instant.now();

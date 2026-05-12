@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import ttrpg.CharManagementService.application.auth.ChangePasswordCommand;
-import ttrpg.CharManagementService.application.auth.ChangePasswordUseCase;
 import ttrpg.CharManagementService.application.auth.LoginUserCommand;
 import ttrpg.CharManagementService.application.auth.LoginUserUseCase;
 import ttrpg.CharManagementService.application.auth.LogoutUserCommand;
@@ -29,7 +27,6 @@ import ttrpg.CharManagementService.domain.exception.InvariantViolationException;
 import ttrpg.CharManagementService.domain.exception.InvalidTokenException;
 import ttrpg.CharManagementService.domain.user.User;
 import ttrpg.CharManagementService.presentation.dto.AuthenticationResponse;
-import ttrpg.CharManagementService.presentation.dto.ChangePasswordRequest;
 import ttrpg.CharManagementService.presentation.dto.LoginUserRequest;
 import ttrpg.CharManagementService.presentation.dto.LogoutRequest;
 import ttrpg.CharManagementService.presentation.dto.RefreshTokenRequest;
@@ -47,7 +44,6 @@ public class AuthController {
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUserUseCase loginUserUseCase;
     private final RefreshAuthenticationUseCase refreshAuthenticationUseCase;
-    private final ChangePasswordUseCase changePasswordUseCase;
     private final LogoutUserUseCase logoutUserUseCase;
     private final UserResponseMapper userResponseMapper;
     private final AuthenticationResponseMapper authenticationResponseMapper;
@@ -92,17 +88,6 @@ public class AuthController {
             )
         );
         return authenticationResponseMapper.toResponse(authenticationResult);
-    }
-
-    @PostMapping("/change-password")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void changePassword(
-        @AuthenticationPrincipal User currentUser,
-        @Valid @RequestBody ChangePasswordRequest request
-    ) {
-        changePasswordUseCase.execute(
-            new ChangePasswordCommand(currentUser.getId().value(), request.oldPassword(), request.newPassword())
-        );
     }
 
     @PostMapping("/logout")
