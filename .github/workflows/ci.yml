@@ -72,6 +72,7 @@ jobs:
           COMPOSE_PROJECT_NAME: ttrpg-service-ci
           INTEGRATION_BASE_URL: http://localhost:8080
           LOG_DIR: .ci-logs/integration
+          DOCKER_SUDO: "true"
         run: |
           chmod +x gradlew
           bash scripts/run-integration-tests.sh
