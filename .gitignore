@@ -39,3 +39,4 @@ out/
 ### Project ###
 .codex
 *.env
+.codeassistant
