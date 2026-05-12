@@ -15,7 +15,19 @@ mkdir -p "$CONTAINER_LOG_DIR"
 
 docker_compose() {
   if [[ "$DOCKER_SUDO" == "true" ]]; then
-    sudo "$DOCKER_BIN" compose "$@"
+    sudo env \
+      POSTGRES_DB="${POSTGRES_DB:-}" \
+      POSTGRES_USER="${POSTGRES_USER:-}" \
+      POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}" \
+      DB_FLYWAY_USER="${DB_FLYWAY_USER:-}" \
+      DB_FLYWAY_PASSWORD="${DB_FLYWAY_PASSWORD:-}" \
+      DB_NAME="${DB_NAME:-}" \
+      DB_HOST="${DB_HOST:-}" \
+      DB_PORT="${DB_PORT:-}" \
+      DB_USER="${DB_USER:-}" \
+      DB_PASSWORD="${DB_PASSWORD:-}" \
+      DB_SCHEMA="${DB_SCHEMA:-}" \
+      "$DOCKER_BIN" compose "$@"
     return
   fi
 
