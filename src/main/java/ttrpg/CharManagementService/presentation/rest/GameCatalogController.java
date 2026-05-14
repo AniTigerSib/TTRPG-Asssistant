@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import ttrpg.CharManagementService.application.gamesystem.CreateCharacterTemplateUseCase;
@@ -32,6 +30,7 @@ import ttrpg.CharManagementService.presentation.dto.UpsertCharacterTemplateReque
 import ttrpg.CharManagementService.presentation.dto.ValidateCharacterRequest;
 import ttrpg.CharManagementService.presentation.dto.ValidateCharacterResponse;
 import ttrpg.CharManagementService.presentation.mapper.GameCatalogResponseMapper;
+import tools.jackson.databind.ObjectMapper;
 
 @Validated
 @RestController

@@ -1,16 +1,15 @@
 package ttrpg.CharManagementService.application.gamesystem;
 
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeMap;
 
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
 import ttrpg.CharManagementService.domain.exception.InvalidInputException;
 import ttrpg.CharManagementService.domain.gamesystem.GameSystemCodes;
@@ -71,10 +70,8 @@ public class FateCoreRulesEngine implements GameSystemRulesEngine {
 
         var normalizedSkills = JsonNodeFactory.instance.objectNode();
         var skillValues = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
-        var fields = skillsNode.fields();
 
-        while (fields.hasNext()) {
-            var entry = fields.next();
+        for (var entry : ((ObjectNode) skillsNode).properties()) {
             var skillName = normalizeSkillName(entry.getKey());
             if (!entry.getValue().canConvertToInt()) {
                 throw InvalidInputException.invalidValue("skills." + skillName, "skill rank must be an integer");
@@ -162,13 +159,13 @@ public class FateCoreRulesEngine implements GameSystemRulesEngine {
 
         for (int index = 0; index < node.size(); index++) {
             var item = node.get(index);
-            if (item == null || !item.isTextual() || item.asText().isBlank()) {
+            if (item == null || !item.isString() || item.asString().isBlank()) {
                 throw InvalidInputException.invalidValue(
                     fieldName + "[" + index + "]",
                     fieldName + " entries must be non-blank strings"
                 );
             }
-            normalizedValues.add(item.asText().trim());
+            normalizedValues.add(item.asString().trim());
         }
         return normalizedValues;
     }
@@ -237,9 +234,8 @@ public class FateCoreRulesEngine implements GameSystemRulesEngine {
     }
 
     private void rejectUnexpectedFields(ObjectNode objectNode, Set<String> allowedFields, String fieldName) {
-        Iterator<String> fieldNames = objectNode.fieldNames();
-        while (fieldNames.hasNext()) {
-            var actualFieldName = fieldNames.next();
+        for (var entry : objectNode.properties()) {
+            var actualFieldName = entry.getKey();
             if (!allowedFields.contains(actualFieldName)) {
                 throw InvalidInputException.invalidValue(fieldName, "Unexpected field: " + actualFieldName);
             }
@@ -326,9 +322,8 @@ public class FateCoreRulesEngine implements GameSystemRulesEngine {
             }
 
             var propertyNames = new LinkedHashSet<String>();
-            var fields = propertiesNode.fieldNames();
-            while (fields.hasNext()) {
-                propertyNames.add(fields.next());
+            for (var entry : ((ObjectNode) propertiesNode).properties()) {
+                propertyNames.add(entry.getKey());
             }
             return propertyNames.isEmpty() ? defaults : Set.copyOf(propertyNames);
         }

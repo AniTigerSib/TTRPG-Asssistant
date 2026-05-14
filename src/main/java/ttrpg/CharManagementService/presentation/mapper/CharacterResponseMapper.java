@@ -2,11 +2,10 @@ package ttrpg.CharManagementService.presentation.mapper;
 
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import ttrpg.CharManagementService.application.character.CharacterDetails;
 import ttrpg.CharManagementService.presentation.dto.CharacterResponse;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor

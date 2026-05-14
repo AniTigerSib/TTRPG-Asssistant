@@ -2,7 +2,7 @@ package ttrpg.CharManagementService.domain.characterdata;
 
 import java.time.Instant;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import ttrpg.CharManagementService.domain.character.CharacterId;
 

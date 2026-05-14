@@ -6,9 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ttrpg.CharManagementService.domain.exception.InvalidInputException;
+import tools.jackson.databind.ObjectMapper;
 
 class FateCoreRulesEngineTest {
 
@@ -69,7 +68,7 @@ class FateCoreRulesEngineTest {
     @Test
     void rejectsStressOutsideConfiguredBounds() throws Exception {
         var invalidCharacter = validCharacter().deepCopy();
-        ((com.fasterxml.jackson.databind.node.ObjectNode) invalidCharacter.get("stress")).put("mental", 5);
+        ((tools.jackson.databind.node.ObjectNode) invalidCharacter.get("stress")).put("mental", 5);
 
         var exception = assertThrows(
             InvalidInputException.class,
@@ -82,7 +81,7 @@ class FateCoreRulesEngineTest {
         );
     }
 
-    private com.fasterxml.jackson.databind.JsonNode validCharacter() throws Exception {
+    private tools.jackson.databind.JsonNode validCharacter() throws Exception {
         return objectMapper.readTree("""
             {
               "name": "Tara Vale",
@@ -134,7 +133,7 @@ class FateCoreRulesEngineTest {
             """);
     }
 
-    private com.fasterxml.jackson.databind.JsonNode templateSchema() throws Exception {
+    private tools.jackson.databind.JsonNode templateSchema() throws Exception {
         return objectMapper.readTree("""
             {
               "type": "fate-core.character-sheet",

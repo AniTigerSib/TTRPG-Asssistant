@@ -13,9 +13,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import ttrpg.CharManagementService.application.gamesystem.GameSystemRulesEngine;
 import ttrpg.CharManagementService.application.gamesystem.GameSystemRulesEngineRegistry;
 import ttrpg.CharManagementService.application.shared.CharacterAccessPolicy;
@@ -44,6 +41,8 @@ import ttrpg.CharManagementService.domain.gamesystem.GameSystemRepository;
 import ttrpg.CharManagementService.domain.gamesystem.GameSystemSnapshot;
 import ttrpg.CharManagementService.domain.user.User;
 import ttrpg.CharManagementService.domain.user.UserId;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 class CreateCharacterUseCaseTest {
 
@@ -153,9 +152,9 @@ class CreateCharacterUseCaseTest {
         }
 
         @Override
-        public com.fasterxml.jackson.databind.JsonNode validateAndNormalize(
-            com.fasterxml.jackson.databind.JsonNode characterData,
-            com.fasterxml.jackson.databind.JsonNode templateSchema
+        public tools.jackson.databind.JsonNode validateAndNormalize(
+            tools.jackson.databind.JsonNode characterData,
+            tools.jackson.databind.JsonNode templateSchema
         ) {
             return characterData.deepCopy();
         }
