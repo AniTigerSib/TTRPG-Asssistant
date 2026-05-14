@@ -97,7 +97,7 @@ class CharacterFlowIntegrationTest extends IntegrationTestSupport {
             "/api/v1/characters",
             orderedMap(
                 "campaignId", campaignId,
-                "gameSystemCode", null,
+                "gameSystemCode", "FATE_CORE",
                 "templateId", null,
                 "name", "Shared Hero",
                 "avatarUrl", null,
