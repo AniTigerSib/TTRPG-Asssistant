@@ -48,6 +48,29 @@ class GetCharacterUseCaseTest {
         assertEquals(10, result.characterData().getData().get("hp").asInt());
     }
 
+
+    @Test
+    void returnsCharacterToCampaignMember() throws Exception {
+        var owner = User.create("test@example.com", "owner", "hashed");
+        var member = User.create("member@example.com", "member", "hashed");
+        var campaignId = new CampaignId(java.util.UUID.randomUUID());
+        var character = Character.create(owner.getId(), campaignId, GameSystemId.newId(), null, "Hero", null, CharacterStatus.DRAFT);
+        var data = CharacterData.create(character.getId(), objectMapper.readTree("{\"hp\":10}"));
+
+        var useCase = new GetCharacterUseCase(
+            new InMemoryCharacterRepository(character),
+            new InMemoryCharacterDataRepository(data),
+            new CharacterAccessPolicy((checkedCampaignId, checkedUserId) ->
+                checkedCampaignId.equals(campaignId) && checkedUserId.equals(member.getId())
+            )
+        );
+
+        var result = useCase.execute(member, character.getId());
+
+        assertEquals("Hero", result.character().getName());
+        assertEquals(10, result.characterData().getData().get("hp").asInt());
+    }
+
     @Test
     void rejectsUnrelatedViewer() throws Exception {
         var owner = User.create("test@example.com", "owner", "hashed");
