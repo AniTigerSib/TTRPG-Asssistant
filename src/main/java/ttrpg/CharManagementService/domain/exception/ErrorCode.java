@@ -11,8 +11,13 @@ public enum ErrorCode {
     ACCESS_DENIED(403, "Access denied"),
     RESOURCE_NOT_FOUND(404, "Resource not found"),
     USER_NOT_FOUND(404, "User not found"),
+    CAMPAIGN_NOT_FOUND(404, "Campaign not found"),
+    CHARACTER_NOT_FOUND(404, "Character not found"),
+    GAME_SYSTEM_NOT_FOUND(404, "Game system not found"),
+    CHARACTER_TEMPLATE_NOT_FOUND(404, "Character template not found"),
     USER_ALREADY_EXISTS(409, "User already exists"),
     BUSINESS_RULE_VIOLATION(409, "Business rule violation"),
+    GAME_SYSTEM_NOT_SUPPORTED(400, "Game system is not supported"),
     INVARIANT_VIOLATION(500, "Internal server error"),
     INTERNAL_SERVER_ERROR(500, "Internal server error");
 

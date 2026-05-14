@@ -68,6 +68,20 @@ public class User {
 
     public Set<UserRole> getRoles() { return Set.copyOf(roles); }
 
+    public boolean hasRole(UserRole role) {
+        return roles.contains(Checkers.requireNonNull(role, "role"));
+    }
+
+    public boolean hasAnyRole(UserRole... values) {
+        Checkers.requireNonNull(values, "roles");
+        for (var role : values) {
+            if (role != null && roles.contains(role)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Instant getCreatedAt() { return createdAt; }
 
     public Instant getUpdatedAt() { return updatedAt; }

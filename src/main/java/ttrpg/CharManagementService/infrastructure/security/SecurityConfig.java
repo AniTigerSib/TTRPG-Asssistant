@@ -35,6 +35,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh")
                 .permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/game-systems", "/api/v1/game-systems/*/templates")
+                .permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/character-templates/*/validate")
+                .permitAll()
                 .requestMatchers("/actuator/health", "/actuator/health/**")
                 .permitAll()
                 .anyRequest()

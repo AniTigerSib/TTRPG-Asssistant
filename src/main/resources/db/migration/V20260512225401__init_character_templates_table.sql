@@ -5,5 +5,6 @@ CREATE TABLE character_templates (
     schema JSONB NOT NULL,
     version INT NOT NULL,
     is_official BOOLEAN NOT NULL DEFAULT FALSE,
+    visibility VARCHAR(255) NOT NULL DEFAULT 'visible',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
