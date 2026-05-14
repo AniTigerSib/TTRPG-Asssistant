@@ -1,6 +1,6 @@
 package ttrpg.CharManagementService.application.gamesystem;
 
-import tools.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public interface GameSystemRulesEngine {
 

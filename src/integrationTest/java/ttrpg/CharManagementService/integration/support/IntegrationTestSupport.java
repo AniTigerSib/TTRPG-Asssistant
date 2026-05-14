@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -17,9 +19,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 
 public abstract class IntegrationTestSupport {
 
@@ -167,14 +169,15 @@ public abstract class IntegrationTestSupport {
             values (?, ?, ?, ?, ?, ?, ?, ?)
             """.formatted(DB_SCHEMA),
             statement -> {
+                var now = Timestamp.from(Instant.now());
                 statement.setObject(1, campaignId);
                 statement.setObject(2, ownerId);
                 statement.setObject(3, gameSystemId);
                 statement.setString(4, name);
-                statement.setString(5, null);
+                statement.setNull(5, Types.VARCHAR);
                 statement.setString(6, visibility);
-                statement.setObject(7, Instant.now());
-                statement.setObject(8, Instant.now());
+                statement.setTimestamp(7, now);
+                statement.setTimestamp(8, now);
             }
         );
         return campaignId;
@@ -236,6 +239,7 @@ public abstract class IntegrationTestSupport {
             values (?, ?, ?, cast(? as jsonb), ?, ?, ?, ?)
             """.formatted(DB_SCHEMA),
             statement -> {
+                var now = Timestamp.from(Instant.now());
                 statement.setObject(1, templateId);
                 statement.setObject(2, gameSystemId);
                 statement.setString(3, name);
@@ -243,7 +247,7 @@ public abstract class IntegrationTestSupport {
                 statement.setInt(5, version);
                 statement.setBoolean(6, official);
                 statement.setString(7, visibility);
-                statement.setObject(8, Instant.now());
+                statement.setTimestamp(8, now);
             }
         );
     }

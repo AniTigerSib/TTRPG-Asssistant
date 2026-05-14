@@ -19,7 +19,7 @@ import org.springframework.security.web.method.annotation.AuthenticationPrincipa
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ttrpg.CharManagementService.application.gamesystem.CharacterTemplateValidationResult;
 import ttrpg.CharManagementService.application.gamesystem.CreateCharacterTemplateUseCase;

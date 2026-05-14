@@ -9,7 +9,7 @@ import ttrpg.CharManagementService.domain.gamesystem.GameSystem;
 import ttrpg.CharManagementService.presentation.dto.CharacterTemplateResponse;
 import ttrpg.CharManagementService.presentation.dto.GameSystemResponse;
 import ttrpg.CharManagementService.presentation.dto.ValidateCharacterResponse;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor

@@ -30,7 +30,7 @@ import ttrpg.CharManagementService.presentation.dto.UpsertCharacterTemplateReque
 import ttrpg.CharManagementService.presentation.dto.ValidateCharacterRequest;
 import ttrpg.CharManagementService.presentation.dto.ValidateCharacterResponse;
 import ttrpg.CharManagementService.presentation.mapper.GameCatalogResponseMapper;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Validated
 @RestController

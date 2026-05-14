@@ -6,10 +6,10 @@ import java.util.TreeMap;
 
 import org.springframework.stereotype.Service;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.JsonNodeFactory;
-import tools.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ttrpg.CharManagementService.domain.exception.InvalidInputException;
 import ttrpg.CharManagementService.domain.gamesystem.GameSystemCodes;
@@ -159,13 +159,13 @@ public class FateCoreRulesEngine implements GameSystemRulesEngine {
 
         for (int index = 0; index < node.size(); index++) {
             var item = node.get(index);
-            if (item == null || !item.isString() || item.asString().isBlank()) {
+            if (item == null || !item.isTextual() || item.asText().isBlank()) {
                 throw InvalidInputException.invalidValue(
                     fieldName + "[" + index + "]",
                     fieldName + " entries must be non-blank strings"
                 );
             }
-            normalizedValues.add(item.asString().trim());
+            normalizedValues.add(item.asText().trim());
         }
         return normalizedValues;
     }

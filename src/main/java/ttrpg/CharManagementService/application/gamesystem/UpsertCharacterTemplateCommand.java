@@ -2,7 +2,7 @@ package ttrpg.CharManagementService.application.gamesystem;
 
 import java.util.UUID;
 
-import tools.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public record UpsertCharacterTemplateCommand(
     UUID gameSystemId,

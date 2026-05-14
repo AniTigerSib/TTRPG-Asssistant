@@ -27,7 +27,7 @@ import ttrpg.CharManagementService.presentation.dto.CharacterResponse;
 import ttrpg.CharManagementService.presentation.dto.CreateCharacterRequest;
 import ttrpg.CharManagementService.presentation.dto.UpdateCharacterRequest;
 import ttrpg.CharManagementService.presentation.mapper.CharacterResponseMapper;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Validated
 @RestController

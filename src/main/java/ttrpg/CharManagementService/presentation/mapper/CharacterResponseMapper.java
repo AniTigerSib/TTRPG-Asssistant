@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import ttrpg.CharManagementService.application.character.CharacterDetails;
 import ttrpg.CharManagementService.presentation.dto.CharacterResponse;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor

@@ -1,6 +1,6 @@
 package ttrpg.CharManagementService.application.character;
 
-import tools.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public record UpdateCharacterCommand(
     String name,

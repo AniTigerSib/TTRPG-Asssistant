@@ -2,7 +2,7 @@ package ttrpg.CharManagementService.domain.chartemplate;
 
 import java.time.Instant;
 
-import tools.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import ttrpg.CharManagementService.domain.gamesystem.GameSystemId;
 import ttrpg.CharManagementService.domain.shared.Checkers;

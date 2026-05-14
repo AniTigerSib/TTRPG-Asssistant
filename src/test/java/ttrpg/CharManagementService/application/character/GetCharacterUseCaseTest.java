@@ -10,7 +10,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ttrpg.CharManagementService.application.shared.CharacterAccessPolicy;
 import ttrpg.CharManagementService.domain.campaign.CampaignId;
