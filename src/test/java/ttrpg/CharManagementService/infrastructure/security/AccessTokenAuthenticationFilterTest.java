@@ -17,7 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import ttrpg.CharManagementService.application.auth.AuthenticationTokenService;
 import ttrpg.CharManagementService.domain.user.User;
-import ttrpg.CharManagementService.domain.user.UserId;
 import ttrpg.CharManagementService.domain.user.UserRepository;
 
 class AccessTokenAuthenticationFilterTest {

@@ -1,0 +1,89 @@
+name: Build Docker Image
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+    branches:
+      # - main
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  YC_REGISTRY: cr.yandex/crp3mua4d3paqcdl57lr
+  IMAGE_NAME: ttrpg-app
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on:
+      - self-hosted
+      - ci
+    concurrency:
+      group: push-image-main
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Resolve image metadata
+        id: meta
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            GIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          else
+            GIT_SHA="${{ github.sha }}"
+          fi
+
+          SHORT_SHA="${GIT_SHA::12}"
+          IMAGE_REF="${{ env.YC_REGISTRY }}/${{ env.IMAGE_NAME }}"
+
+          {
+            echo "git_sha=${GIT_SHA}"
+            echo "image_ref=${IMAGE_REF}"
+            echo "image_version=${SHORT_SHA}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Log in to Yandex Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: cr.yandex
+          username: iam
+          password: ${{ secrets.YC_SA_KEY }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_SCHEMA: ${{ secrets.DB_SCHEMA }}
+          REDIS_HOST: ${{ vars.REDIS_HOST }}
+          REDIS_PORT: ${{ vars.REDIS_PORT }}
+          DB_FLYWAY_USER: ${{ secrets.DB_FLYWAY_USER }}
+          DB_FLYWAY_PASSWORD: ${{ secrets.DB_FLYWAY_PASSWORD }}
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image_ref }}:${{ steps.meta.outputs.image_version }}
+            ${{ steps.meta.outputs.image_ref }}:latest
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.git_sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
