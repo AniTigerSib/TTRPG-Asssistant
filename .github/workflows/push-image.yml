@@ -7,8 +7,7 @@ on:
     types:
       - completed
     branches:
-      # - main
-      - develop
+      - main
   workflow_dispatch:
 
 permissions:
