@@ -16,10 +16,6 @@ on:
 permissions:
   contents: read
 
-env:
-  YC_REGISTRY: cr.yandex/crp3mua4d3paqcdl57lr
-  IMAGE_NAME: ttrpg-app
-
 jobs:
   build-and-push:
     name: Build and Push Docker Image
@@ -51,7 +47,7 @@ jobs:
           fi
 
           SHORT_SHA="${GIT_SHA::12}"
-          IMAGE_REF="${{ env.YC_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          IMAGE_REF="${{ vars.REGISTRY_URI }}/ttrpg-service"
 
           {
             echo "git_sha=${GIT_SHA}"
@@ -59,12 +55,12 @@ jobs:
             echo "image_version=${SHORT_SHA}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Log in to Yandex Container Registry
+      - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
-          registry: cr.yandex
-          username: iam
-          password: ${{ secrets.YC_SA_KEY }}
+          registry: ${{ vars.REGISTRY_URI }}
+          username: ${{ secrets.EVO_CR_LOGIN }}
+          password: ${{ secrets.EVO_CR_PWD }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
