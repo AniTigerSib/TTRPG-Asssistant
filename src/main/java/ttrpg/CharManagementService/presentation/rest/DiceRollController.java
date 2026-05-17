@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import ttrpg.CharManagementService.application.dice.RollDiceCommand;
@@ -24,6 +25,7 @@ import ttrpg.CharManagementService.presentation.mapper.DiceRollResponseMapper;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class DiceRollController {
 
     private final RollDiceUseCase rollDiceUseCase;

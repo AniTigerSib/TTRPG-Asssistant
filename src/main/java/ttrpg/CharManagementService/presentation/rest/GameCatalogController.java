@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import ttrpg.CharManagementService.application.gamesystem.CreateCharacterTemplateUseCase;
 import ttrpg.CharManagementService.application.gamesystem.ListCharacterTemplatesUseCase;
@@ -76,6 +77,7 @@ public class GameCatalogController {
     }
 
     @PostMapping("/character-templates")
+    @SecurityRequirement(name = "bearerAuth")
     public CharacterTemplateResponse createCharacterTemplate(
         @AuthenticationPrincipal User currentUser,
         @Valid @RequestBody UpsertCharacterTemplateRequest request
@@ -86,6 +88,7 @@ public class GameCatalogController {
     }
 
     @PutMapping("/character-templates/{templateId}")
+    @SecurityRequirement(name = "bearerAuth")
     public CharacterTemplateResponse updateCharacterTemplate(
         @AuthenticationPrincipal User currentUser,
         @PathVariable UUID templateId,
