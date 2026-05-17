@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 
 import ttrpg.CharManagementService.domain.auth.PasswordPolicy;
 import ttrpg.CharManagementService.domain.auth.PasswordPolicyContext;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidPasswordException;
+import ttrpg.CharManagementService.domain.exception.InvalidPasswordException;
 import ttrpg.CharManagementService.domain.shared.Checkers;
 
 @Component

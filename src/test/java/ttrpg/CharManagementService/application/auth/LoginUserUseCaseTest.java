@@ -1,8 +1,11 @@
 package ttrpg.CharManagementService.application.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.net.InetAddress;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -10,7 +13,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import ttrpg.CharManagementService.domain.auth.PasswordHasher;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidCredentailsException;
+import ttrpg.CharManagementService.domain.exception.InvalidCredentialsException;
 import ttrpg.CharManagementService.domain.user.User;
 import ttrpg.CharManagementService.domain.user.UserId;
 import ttrpg.CharManagementService.domain.user.UserRepository;
@@ -23,11 +26,18 @@ class LoginUserUseCaseTest {
         var user = User.create("test@example.com", "hero", "hashed:Password1");
         repository.save(user);
 
-        var useCase = new LoginUserUseCase(repository, new PrefixPasswordHasher());
+        var useCase = new LoginUserUseCase(
+            repository,
+            new PrefixPasswordHasher(),
+            new StubAuthenticationTokenService()
+        );
 
-        var authenticated = useCase.execute(new LoginUserCommand("test@example.com", "Password1"));
+        var authenticated = useCase.execute(
+            new LoginUserCommand("test@example.com", "Password1", "JUnit", loopbackAddress())
+        );
 
-        assertEquals(user.getId(), authenticated.getId());
+        assertEquals(user.getId(), authenticated.user().getId());
+        assertNotNull(authenticated.tokens().accessToken());
     }
 
     @Test
@@ -36,11 +46,17 @@ class LoginUserUseCaseTest {
         var user = User.create("test@example.com", "hero", "hashed:Password1");
         repository.save(user);
 
-        var useCase = new LoginUserUseCase(repository, new PrefixPasswordHasher());
+        var useCase = new LoginUserUseCase(
+            repository,
+            new PrefixPasswordHasher(),
+            new StubAuthenticationTokenService()
+        );
 
-        var authenticated = useCase.execute(new LoginUserCommand("hero", "Password1"));
+        var authenticated = useCase.execute(
+            new LoginUserCommand("hero", "Password1", "JUnit", loopbackAddress())
+        );
 
-        assertEquals(user.getEmail(), authenticated.getEmail());
+        assertEquals(user.getEmail(), authenticated.user().getEmail());
     }
 
     @Test
@@ -48,12 +64,20 @@ class LoginUserUseCaseTest {
         var repository = new InMemoryUserRepository();
         repository.save(User.create("test@example.com", "hero", "hashed:Password1"));
 
-        var useCase = new LoginUserUseCase(repository, new PrefixPasswordHasher());
+        var useCase = new LoginUserUseCase(
+            repository,
+            new PrefixPasswordHasher(),
+            new StubAuthenticationTokenService()
+        );
 
         assertThrows(
-            InvalidCredentailsException.class,
-            () -> useCase.execute(new LoginUserCommand("hero", "Wrong1"))
+            InvalidCredentialsException.class,
+            () -> useCase.execute(new LoginUserCommand("hero", "Wrong1", "JUnit", loopbackAddress()))
         );
+    }
+
+    private static InetAddress loopbackAddress() {
+        return InetAddress.getLoopbackAddress();
     }
 
     private static final class PrefixPasswordHasher implements PasswordHasher {
@@ -65,6 +89,22 @@ class LoginUserUseCaseTest {
         @Override
         public boolean matches(String rawPassword, String hashedPassword) {
             return hash(rawPassword).equals(hashedPassword);
+        }
+    }
+
+    private static final class StubAuthenticationTokenService extends AuthenticationTokenService {
+        private StubAuthenticationTokenService() {
+            super(null, null, null);
+        }
+
+        @Override
+        public AuthenticationTokens issueTokens(UserId userId, String userAgent, InetAddress ipAddress) {
+            return new AuthenticationTokens(
+                "access-token",
+                Instant.parse("2026-05-06T10:15:30Z"),
+                "refresh-token",
+                Instant.parse("2026-06-05T10:15:30Z")
+            );
         }
     }
 

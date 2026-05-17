@@ -4,11 +4,14 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,41 +19,34 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
-import ttrpg.CharManagementService.domain.exception.ExternalException;
-import ttrpg.CharManagementService.domain.exception.InternalException;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.ResourceNotFoundException;
+import ttrpg.CharManagementService.domain.exception.ErrorCode;
+import ttrpg.CharManagementService.domain.exception.ServerException;
+import ttrpg.CharManagementService.domain.exception.ServiceException;
 import ttrpg.CharManagementService.presentation.dto.ApiErrorResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleNotFound(
-        ResourceNotFoundException exception,
+    @ExceptionHandler(ServiceException.class)
+    public ResponseEntity<ApiErrorResponse> handleServiceException(
+        ServiceException exception,
         HttpServletRequest request
     ) {
-        return build(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", exception.getMessage(), request, Map.of());
-    }
+        if (exception instanceof ServerException) {
+            log.error("Handled server exception [{}] on {} {}", exception.getErrorCode(), request.getMethod(),
+                request.getRequestURI(), exception);
+        } else {
+            log.warn("Handled business exception [{}] on {} {}: {}", exception.getErrorCode(), request.getMethod(),
+                request.getRequestURI(), exception.getMessage());
+        }
 
-    @ExceptionHandler(ExternalException.class)
-    public ResponseEntity<ApiErrorResponse> handleExternal(
-        ExternalException exception,
-        HttpServletRequest request
-    ) {
-        return build(HttpStatus.BAD_REQUEST, "BAD_REQUEST", exception.getMessage(), request, Map.of());
-    }
-
-    @ExceptionHandler(InternalException.class)
-    public ResponseEntity<ApiErrorResponse> handleInternal(
-        InternalException exception,
-        HttpServletRequest request
-    ) {
         return build(
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            "INTERNAL_SERVER_ERROR",
-            "Internal server error",
+            HttpStatusCode.valueOf(exception.getHttpStatus()),
+            exception.getErrorCode().name(),
+            exception.getPublicMessage(),
             request,
-            Map.of()
+            exception.getDetails()
         );
     }
 
@@ -60,9 +56,9 @@ public class GlobalExceptionHandler {
         HttpServletRequest request
     ) {
         return build(
-            HttpStatus.BAD_REQUEST,
-            "REQUEST_VALIDATION_FAILED",
-            "Request validation failed",
+            HttpStatusCode.valueOf(ErrorCode.REQUEST_VALIDATION_FAILED.httpStatus()),
+            ErrorCode.REQUEST_VALIDATION_FAILED.name(),
+            ErrorCode.REQUEST_VALIDATION_FAILED.defaultMessage(),
             request,
             extractFieldErrors(exception.getBindingResult().getFieldErrors())
         );
@@ -74,9 +70,9 @@ public class GlobalExceptionHandler {
         HttpServletRequest request
     ) {
         return build(
-            HttpStatus.BAD_REQUEST,
-            "REQUEST_VALIDATION_FAILED",
-            "Request validation failed",
+            HttpStatusCode.valueOf(ErrorCode.REQUEST_VALIDATION_FAILED.httpStatus()),
+            ErrorCode.REQUEST_VALIDATION_FAILED.name(),
+            ErrorCode.REQUEST_VALIDATION_FAILED.defaultMessage(),
             request,
             extractFieldErrors(exception.getBindingResult().getFieldErrors())
         );
@@ -93,9 +89,9 @@ public class GlobalExceptionHandler {
         );
 
         return build(
-            HttpStatus.BAD_REQUEST,
-            "REQUEST_VALIDATION_FAILED",
-            "Request validation failed",
+            HttpStatusCode.valueOf(ErrorCode.REQUEST_VALIDATION_FAILED.httpStatus()),
+            ErrorCode.REQUEST_VALIDATION_FAILED.name(),
+            ErrorCode.REQUEST_VALIDATION_FAILED.defaultMessage(),
             request,
             errors
         );
@@ -106,7 +102,27 @@ public class GlobalExceptionHandler {
         HttpMessageNotReadableException exception,
         HttpServletRequest request
     ) {
-        return build(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST_BODY", "Malformed request body", request, Map.of());
+        return build(
+            HttpStatusCode.valueOf(ErrorCode.MALFORMED_REQUEST_BODY.httpStatus()),
+            ErrorCode.MALFORMED_REQUEST_BODY.name(),
+            ErrorCode.MALFORMED_REQUEST_BODY.defaultMessage(),
+            request,
+            Map.of()
+        );
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnsupportedMediaType(
+        HttpMediaTypeNotSupportedException exception,
+        HttpServletRequest request
+    ) {
+        return build(
+            HttpStatusCode.valueOf(ErrorCode.UNSUPPORTED_MEDIA_TYPE.httpStatus()),
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE.name(),
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE.defaultMessage(),
+            request,
+            Map.of()
+        );
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -115,12 +131,13 @@ public class GlobalExceptionHandler {
         HttpServletRequest request
     ) {
         var parameterName = exception.getName();
+        var message = "Invalid value for parameter: " + parameterName;
         return build(
-            HttpStatus.BAD_REQUEST,
-            "INVALID_PARAMETER",
-            "Invalid value for parameter: " + parameterName,
+            HttpStatusCode.valueOf(ErrorCode.INVALID_PARAMETER.httpStatus()),
+            ErrorCode.INVALID_PARAMETER.name(),
+            message,
             request,
-            Map.of(parameterName, "Invalid value")
+            Map.of(parameterName, message)
         );
     }
 
@@ -129,21 +146,22 @@ public class GlobalExceptionHandler {
         Exception exception,
         HttpServletRequest request
     ) {
+        log.error("Unhandled exception on {} {}", request.getMethod(), request.getRequestURI(), exception);
         return build(
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            "INTERNAL_SERVER_ERROR",
-            "Internal server error",
+            HttpStatusCode.valueOf(ErrorCode.INTERNAL_SERVER_ERROR.httpStatus()),
+            ErrorCode.INTERNAL_SERVER_ERROR.name(),
+            ErrorCode.INTERNAL_SERVER_ERROR.defaultMessage(),
             request,
             Map.of()
         );
     }
 
     private ResponseEntity<ApiErrorResponse> build(
-        HttpStatus status,
+        HttpStatusCode status,
         String code,
         String message,
         HttpServletRequest request,
-        Map<String, String> errors
+        Map<String, String> details
     ) {
         return ResponseEntity.status(status).body(
             new ApiErrorResponse(
@@ -152,7 +170,7 @@ public class GlobalExceptionHandler {
                 status.value(),
                 Instant.now(),
                 request.getRequestURI(),
-                errors
+                details
             )
         );
     }

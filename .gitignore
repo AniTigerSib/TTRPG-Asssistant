@@ -39,3 +39,5 @@ out/
 ### Project ###
 .codex
 *.env
+.codeassistant
+.ci-logs/

@@ -1,11 +1,25 @@
 spring:
+  data:
+    redis:
+      repositories:
+        enabled: false
+
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=${DB_SCHEMA}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 10
+
+  flyway:
+    enabled: true
+    user: ${DB_FLYWAY_USER}
+    password: ${DB_FLYWAY_PASSWORD}
+    default-schema: ${DB_SCHEMA}
+    schemas: ${DB_SCHEMA}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
   jpa:
     hibernate:
@@ -17,3 +31,13 @@ spring:
 
   application:
     name: service
+
+app:
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+  auth:
+    tokens:
+      access-ttl: ${AUTH_ACCESS_TOKEN_TTL:PT15M}
+      refresh-ttl: ${AUTH_REFRESH_TOKEN_TTL:P30D}

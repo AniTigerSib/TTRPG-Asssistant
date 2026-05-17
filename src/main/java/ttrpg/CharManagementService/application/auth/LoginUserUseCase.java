@@ -5,7 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import ttrpg.CharManagementService.domain.auth.PasswordHasher;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidCredentailsException;
+import ttrpg.CharManagementService.domain.exception.InvalidCredentialsException;
 import ttrpg.CharManagementService.domain.shared.Checkers;
 import ttrpg.CharManagementService.domain.user.User;
 import ttrpg.CharManagementService.domain.user.UserRepository;
@@ -16,20 +16,24 @@ public class LoginUserUseCase {
 
     private final UserRepository userRepository;
     private final PasswordHasher passwordHasher;
+    private final AuthenticationTokenService authenticationTokenService;
 
-    @Transactional(readOnly = true)
-    public User execute(LoginUserCommand command) {
+    @Transactional
+    public AuthenticationResult execute(LoginUserCommand command) {
         Checkers.requireNonNull(command, "command");
 
         var login = Checkers.requireStringNonBlank(command.login(), "login");
         var password = Checkers.requireStringNonBlank(command.password(), "password");
+        var userAgent = Checkers.requireStringNonBlank(command.userAgent(), "userAgent");
+        var ipAddress = Checkers.requireNonNull(command.ipAddress(), "ipAddress");
 
         var user = findByLogin(login);
         if (user == null || !passwordHasher.matches(password, user.getPasswordHash())) {
-            throw new InvalidCredentailsException("Invalid login or password");
+            throw new InvalidCredentialsException("Invalid login or password");
         }
 
-        return user;
+        var tokens = authenticationTokenService.issueTokens(user.getId(), userAgent, ipAddress);
+        return new AuthenticationResult(user, tokens);
     }
 
     private User findByLogin(String login) {

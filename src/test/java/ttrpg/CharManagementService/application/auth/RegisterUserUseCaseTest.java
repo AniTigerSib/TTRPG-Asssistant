@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import ttrpg.CharManagementService.domain.auth.PasswordHasher;
 import ttrpg.CharManagementService.domain.auth.PasswordPolicy;
 import ttrpg.CharManagementService.domain.auth.PasswordPolicyContext;
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.UserAlreadyExistsException;
+import ttrpg.CharManagementService.domain.exception.UserAlreadyExistsException;
 import ttrpg.CharManagementService.domain.user.User;
 import ttrpg.CharManagementService.domain.user.UserId;
 import ttrpg.CharManagementService.domain.user.UserRepository;

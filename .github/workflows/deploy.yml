@@ -1,0 +1,229 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows:
+      - Build Docker Image
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Docker image tag to deploy. Defaults to the triggering commit short SHA.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on:
+      - self-hosted
+      - ci
+    # environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Resolve deployment metadata
+        id: meta
+        shell: bash
+        env:
+          MANUAL_IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            GIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          else
+            GIT_SHA="${{ github.sha }}"
+          fi
+
+          SHORT_SHA="${GIT_SHA::12}"
+          IMAGE_TAG="${MANUAL_IMAGE_TAG:-$SHORT_SHA}"
+          IMAGE_REF="${{ vars.REGISTRY_URI }}/ttrpg-service"
+
+          {
+            echo "git_sha=${GIT_SHA}"
+            echo "image_tag=${IMAGE_TAG}"
+            echo "image_ref=${IMAGE_REF}"
+            echo "service_image=${IMAGE_REF}:${IMAGE_TAG}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate deploy configuration
+        shell: bash
+        env:
+          REGISTRY_URI: ${{ vars.REGISTRY_URI }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          EVO_CR_LOGIN: ${{ secrets.EVO_CR_LOGIN }}
+          EVO_CR_PWD: ${{ secrets.EVO_CR_PWD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_SCHEMA: ${{ secrets.DB_SCHEMA }}
+          DB_FLYWAY_USER: ${{ secrets.DB_FLYWAY_USER }}
+          DB_FLYWAY_PASSWORD: ${{ secrets.DB_FLYWAY_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          required_vars=(
+            REGISTRY_URI
+            DEPLOY_HOST
+            DEPLOY_USER
+            DEPLOY_PATH
+            DEPLOY_SSH_PRIVATE_KEY
+            EVO_CR_LOGIN
+            EVO_CR_PWD
+            POSTGRES_DB
+            POSTGRES_USER
+            POSTGRES_PASSWORD
+            DB_USER
+            DB_PASSWORD
+            DB_SCHEMA
+            DB_FLYWAY_USER
+            DB_FLYWAY_PASSWORD
+          )
+
+          for var_name in "${required_vars[@]}"; do
+            if [[ -z "${!var_name}" ]]; then
+              echo "Missing required deploy configuration: ${var_name}" >&2
+              exit 1
+            fi
+          done
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+
+      - name: Build deployment bundle
+        shell: bash
+        env:
+          SERVICE_IMAGE: ${{ steps.meta.outputs.service_image }}
+          REGISTRY_URI: ${{ vars.REGISTRY_URI }}
+          REGISTRY_LOGIN: ${{ secrets.EVO_CR_LOGIN }}
+          REGISTRY_PASSWORD: ${{ secrets.EVO_CR_PWD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_SCHEMA: ${{ secrets.DB_SCHEMA }}
+          DB_FLYWAY_USER: ${{ secrets.DB_FLYWAY_USER }}
+          DB_FLYWAY_PASSWORD: ${{ secrets.DB_FLYWAY_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          SERVICE_PORT: ${{ vars.SERVICE_PORT }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p .deploy/docker/postgres
+          cp compose.prod.yaml .deploy/compose.prod.yaml
+          cp -R docker/postgres/init .deploy/docker/postgres/init
+
+          cat > .deploy/.env <<EOF
+          SERVICE_IMAGE=${SERVICE_IMAGE}
+          SERVICE_PORT=${SERVICE_PORT:-8080}
+          POSTGRES_DB=${POSTGRES_DB}
+          POSTGRES_USER=${POSTGRES_USER}
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          DB_NAME=${DB_NAME:-$POSTGRES_DB}
+          DB_USER=${DB_USER}
+          DB_PASSWORD=${DB_PASSWORD}
+          DB_SCHEMA=${DB_SCHEMA}
+          DB_FLYWAY_USER=${DB_FLYWAY_USER}
+          DB_FLYWAY_PASSWORD=${DB_FLYWAY_PASSWORD}
+          REDIS_PASSWORD=${REDIS_PASSWORD}
+          EOF
+
+          cat > .deploy/.registry.env <<EOF
+          REGISTRY_URI=${REGISTRY_URI}
+          REGISTRY_LOGIN=${REGISTRY_LOGIN}
+          REGISTRY_PASSWORD=${REGISTRY_PASSWORD}
+          EOF
+
+      - name: Upload deployment files
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+
+          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '${DEPLOY_PATH}/docker/postgres/init'"
+          scp -P "${DEPLOY_PORT:-22}" .deploy/compose.prod.yaml "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/compose.prod.yaml"
+          scp -P "${DEPLOY_PORT:-22}" .deploy/.env "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/.env"
+          scp -P "${DEPLOY_PORT:-22}" .deploy/.registry.env "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/.registry.env"
+          scp -P "${DEPLOY_PORT:-22}" docker/postgres/init/*.sh "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/docker/postgres/init/"
+          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "chmod 600 '${DEPLOY_PATH}/.env' '${DEPLOY_PATH}/.registry.env'"
+
+      - name: Deploy stack on target host
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DEPLOY_DOCKER_USE_SUDO: ${{ vars.DEPLOY_DOCKER_USE_SUDO }}
+          SERVICE_PORT: ${{ vars.SERVICE_PORT }}
+        run: |
+          set -euo pipefail
+
+          ssh -p "${DEPLOY_PORT:-22}" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "DEPLOY_PATH='${DEPLOY_PATH}' DEPLOY_DOCKER_USE_SUDO='${DEPLOY_DOCKER_USE_SUDO}' SERVICE_PORT='${SERVICE_PORT:-8080}' bash -s" <<'EOF'
+          set -euo pipefail
+
+          if [[ "${DEPLOY_DOCKER_USE_SUDO}" == "true" ]]; then
+            DOCKER_BIN=(sudo docker)
+          else
+            DOCKER_BIN=(docker)
+          fi
+
+          compose_cmd() {
+            "${DOCKER_BIN[@]}" compose --env-file "${DEPLOY_PATH}/.env" -f "${DEPLOY_PATH}/compose.prod.yaml" "$@"
+          }
+
+          # shellcheck disable=SC1090
+          source "${DEPLOY_PATH}/.registry.env"
+          HEALTHCHECK_URL="http://127.0.0.1:${SERVICE_PORT}/actuator/health"
+          trap 'rm -f "${DEPLOY_PATH}/.registry.env"' EXIT
+
+          echo "${REGISTRY_PASSWORD}" | "${DOCKER_BIN[@]}" login "${REGISTRY_URI}" --username "${REGISTRY_LOGIN}" --password-stdin
+          compose_cmd pull service
+          compose_cmd up -d --remove-orphans
+
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail "${HEALTHCHECK_URL}" >/dev/null; then
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          compose_cmd logs --no-color service
+          exit 1
+          EOF
+
+      - name: Cleanup local deployment bundle
+        if: always()
+        shell: bash
+        run: rm -rf .deploy

@@ -3,9 +3,10 @@ package ttrpg.CharManagementService.domain.user;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-import ttrpg.CharManagementService.domain.exception.ExternalExceptions.InvalidDataProvidedException;
+import ttrpg.CharManagementService.domain.exception.BusinessRuleViolationException;
 import ttrpg.CharManagementService.domain.shared.Checkers;
 
 public class User {
@@ -23,7 +24,7 @@ public class User {
     private User(UserId id, String email, String username,
                 String passwordHash, Set<UserRole> roles,
                 Instant createdAt, Instant updatedAt) {
-        this.id = id;
+        this.id = Checkers.requireNonNull(id, "id");
         this.email = Checkers.requireStringNonBlank(email, "email");
         this.username = Checkers.requireStringNonBlank(username, "username");
         this.passwordHash = Checkers.requireStringNonBlank(passwordHash, "passwordHash");
@@ -67,6 +68,20 @@ public class User {
 
     public Set<UserRole> getRoles() { return Set.copyOf(roles); }
 
+    public boolean hasRole(UserRole role) {
+        return roles.contains(Checkers.requireNonNull(role, "role"));
+    }
+
+    public boolean hasAnyRole(UserRole... values) {
+        Checkers.requireNonNull(values, "roles");
+        for (var role : values) {
+            if (role != null && roles.contains(role)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Instant getCreatedAt() { return createdAt; }
 
     public Instant getUpdatedAt() { return updatedAt; }
@@ -88,6 +103,11 @@ public class User {
         updatedAt = Instant.now();
     }
 
+    public void changeUsername(String newUsername) {
+        this.username = Checkers.requireStringNonBlank(newUsername, "newUsername");
+        updatedAt = Instant.now();
+    }
+
     public void addRole(UserRole role) {
         roles.add(Checkers.requireNonNull(role, "role"));
         updatedAt = Instant.now();
@@ -96,7 +116,10 @@ public class User {
     public void removeRole(UserRole role) {
         Checkers.requireNonNull(role, "role");
         if (role == UserRole.USER) {
-            throw new InvalidDataProvidedException("Base USER role cannot be removed");
+            throw new BusinessRuleViolationException(
+                "Base USER role cannot be removed",
+                Map.of("role", "Base USER role cannot be removed")
+            );
         }
         roles.remove(role);
         updatedAt = Instant.now();
