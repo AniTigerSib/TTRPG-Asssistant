@@ -34,7 +34,18 @@ jobs:
         shell: bash
         run: |
           chmod +x gradlew
-          ./gradlew clean test 2>&1 | tee .ci-logs/unit/unit-tests.log
+          ./gradlew clean test jacocoTestReport 2>&1 | tee .ci-logs/unit/unit-tests.log
+
+      - name: Upload unit test coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage-report
+          path: |
+            build/reports/jacoco/test/**
+            build/jacoco/test.exec
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Upload unit test logs
         if: always()

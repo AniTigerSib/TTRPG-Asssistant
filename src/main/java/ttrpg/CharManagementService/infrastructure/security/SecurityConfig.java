@@ -39,6 +39,8 @@ public class SecurityConfig {
                 .permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/character-templates/*/validate")
                 .permitAll()
+                .requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml", "/swagger-ui.html", "/swagger-ui/**")
+                .permitAll()
                 .requestMatchers("/actuator/health", "/actuator/health/**")
                 .permitAll()
                 .anyRequest()

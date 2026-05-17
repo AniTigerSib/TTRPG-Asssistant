@@ -1,5 +1,6 @@
 plugins {
 	java
+	jacoco
 	id("org.springframework.boot") version "4.0.6"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("org.flywaydb.flyway") version "12.4.0"
@@ -37,6 +38,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 	implementation("org.springframework.security:spring-security-crypto")
 	runtimeOnly("org.postgresql:postgresql")
@@ -52,6 +54,24 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+jacoco {
+	toolVersion = "0.8.13"
+}
+
+tasks.named<Test>("test") {
+	finalizedBy(tasks.named("jacocoTestReport"))
+}
+
+tasks.named<JacocoReport>("jacocoTestReport") {
+	dependsOn(tasks.named<Test>("test"))
+
+	reports {
+		xml.required.set(true)
+		html.required.set(true)
+		csv.required.set(false)
+	}
 }
 
 tasks.register<Test>("integrationTest") {
